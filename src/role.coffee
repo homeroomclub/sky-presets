@@ -193,6 +193,7 @@ mixinPolicyBuilders =
       Effect: "Allow"
       Action: [
         "sqs:GetQueueUrl"
+        "sqs:GetQueueAttributes"
         "sqs:DeleteMessage"
         "sqs:ReceiveMessage"
         "sqs:SendMessage"
