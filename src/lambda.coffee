@@ -34,7 +34,7 @@ updateLambdas = ({ namespace, environment, lambda, variables, version }) ->
       data = await FS.readFile "build/lambda/#{ handler.name }.zip"
     
     if data?
-      console.log "publishing #{handler.name}"
+      console.log "publishing #{ handler.name }"
 
       name = nameLambda { namespace, environment, name: handler.name }
 
@@ -47,8 +47,13 @@ updateLambdas = ({ namespace, environment, lambda, variables, version }) ->
         role
       }
 
+      # Lambda needs to exist before we link it to its sources.
+      if handler.sources?
+        await putSources name, handler.sources
+
       if version
-        await versionLambda name
+        { version } = await versionLambda name
+        console.log "cut version #{ name } v#{ version }"
 
 updateSources = ({ namespace, environment, handler }) ->
   name = nameLambda { namespace, environment, name: handler.name }
@@ -116,50 +121,5 @@ export default (genie, options) ->
 
     genie.define "sky:lambda:delete", guard (environment, name) ->
       await deleteLambda nameLambda { namespace, environment, name }
-      await deleteRole nameRole { namespace, environment, name }
-
-    genie.define "sky:lambda:sources:put", guard (environment, name) ->
-      handler = lambda.handlers.find (h) -> h.name == name
-
-      if !handler?
-        throw new Error "configuration is not available for handler [#{name}]"
-      if !handler.sources?
-        throw new Error "sources are not configured for handler [#{name}]"
-
-      await updateSources { namespace, environment, handler }
-
-    genie.define "sky:lambda:sources:all:put", guard ( environment ) ->
-      for handler, index in lambda.handlers
-        console.log "#{index + 1}: processing #{handler.name}"
-        await updateSources { namespace, environment, handler }
-
-    genie.define "sky:lambda:sources:delete", guard (environment, name) ->
       await deleteSources nameLambda { namespace, environment, name }
-
-    genie.define "sky:lambda:sources:all:delete", guard (environment) ->
-      names = lambda.handlers.map (h) -> h.name == name
-
-      for name in names
-        await deleteSources nameLambda { namespace, environment, name }
-
-
-# createSourceEvents configuration shape
-#  
-# BatchSize
-# BisectBatchOnFunctionError
-# DestinationConfig
-# Enabled
-# EventSourceArn
-# FunctionName
-# FunctionResponseTypes
-# MaximumBatchingWindowInSeconds
-# MaximumRecordAgeInSeconds
-# MaximumRetryAttempts
-# ParallelizationFactor
-# Queues
-# SelfManagedEventSource
-# SourceAccessConfigurations
-# StartingPosition
-# StartingPositionTimestamp
-# Topics
-# TumblingWindowInSeconds
+      await deleteRole nameRole { namespace, environment, name }
