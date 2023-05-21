@@ -12,6 +12,7 @@ import graphene from "./graphene"
 import grapheneAlpha from "./graphene-alpha"
 import queues from "./queue"
 import kinesis from "./kinesis"
+import schedule from "./schedule"
 
 export default (genie) ->
   if (options = genie.get "sky")?
@@ -29,3 +30,4 @@ export default (genie) ->
     grapheneAlpha genie, options
     queues genie, options
     kinesis genie, options
+    schedule genie, options
